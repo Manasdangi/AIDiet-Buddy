@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Image, ActivityIndicator, Alert } from 'react-native';
+import { notify } from '../lib/dialog';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -43,7 +44,7 @@ export default function AddScreen() {
       SpeechModule.addListener('end', () => setListening(false)),
       SpeechModule.addListener('error', (e) => {
         setListening(false);
-        if (e?.error !== 'aborted' && e?.error !== 'no-speech') Alert.alert('Voice input', 'Could not hear that. Please try again or type instead.');
+        if (e?.error !== 'aborted' && e?.error !== 'no-speech') notify('Voice input', 'Could not hear that. Please try again or type instead.');
       }),
     ];
     return () => { subs.forEach((s) => s.remove()); try { SpeechModule.abort(); } catch { /* not listening */ } };
@@ -87,17 +88,18 @@ export default function AddScreen() {
     }
   };
 
-  const pickPhoto = () => {
+  const pickPhoto = async () => {
     if (busy) return;
+    if (Platform.OS === 'web') return sendPhoto(await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 }));
     Alert.alert('Add a photo', undefined, [
       { text: 'Take photo', onPress: async () => {
         const p = await ImagePicker.requestCameraPermissionsAsync();
-        if (!p.granted) return Alert.alert('Camera access needed', 'Allow camera access in Settings to photograph meals.');
+        if (!p.granted) return notify('Camera access needed', 'Allow camera access in Settings to photograph meals.');
         sendPhoto(await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 }));
       } },
       { text: 'Choose from library', onPress: async () => {
         const p = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!p.granted) return Alert.alert('Photo access needed', 'Allow photo access in Settings to pick a meal photo.');
+        if (!p.granted) return notify('Photo access needed', 'Allow photo access in Settings to pick a meal photo.');
         sendPhoto(await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 }));
       } },
       { text: 'Cancel', style: 'cancel' },
@@ -105,18 +107,18 @@ export default function AddScreen() {
   };
 
   const toggleVoice = async () => {
-    if (!SpeechModule) return Alert.alert('Voice input', 'Voice input is available in the installed app, not in Expo Go. You can type instead.');
+    if (!SpeechModule) return notify('Voice input', 'Voice input is available in the installed app, not in Expo Go. You can type instead.');
     if (listening) { SpeechModule.stop(); return; }
     try {
       const perm = await SpeechModule.requestPermissionsAsync();
-      if (!perm.granted) return Alert.alert('Microphone access needed', 'Allow microphone and speech recognition in Settings to use voice.');
+      if (!perm.granted) return notify('Microphone access needed', 'Allow microphone and speech recognition in Settings to use voice.');
       setText('');
       setUsedVoice(true);
       setListening(true);
       SpeechModule.start({ lang: hindi ? 'hi-IN' : 'en-IN', interimResults: true, continuous: false });
     } catch {
       setListening(false);
-      Alert.alert('Voice input', 'Could not start voice input. Please type instead.');
+      notify('Voice input', 'Could not start voice input. Please type instead.');
     }
   };
 
@@ -128,7 +130,7 @@ export default function AddScreen() {
       patch(msg.id, { status: 'saved' });
     } catch {
       patch(msg.id, { status: 'pending' });
-      Alert.alert('Could not save', 'Check your internet and try again.');
+      notify('Could not save', 'Check your internet and try again.');
     }
   };
 

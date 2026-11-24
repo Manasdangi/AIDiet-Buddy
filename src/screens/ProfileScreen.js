@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useStore from '../store/useStore';
 import BodyForm from '../components/BodyForm';
 import { Button, Card } from '../components/ui';
 import { deleteAccount } from '../services/profile';
 import { GOALS } from '../lib/targets';
+import { confirmDialog, notify } from '../lib/dialog';
 import { useThemeColors, typography, spacing } from '../utils/theme';
 
 const PRIVACY_URL = process.env.EXPO_PUBLIC_PRIVACY_URL;
@@ -18,22 +19,16 @@ export default function ProfileScreen() {
   const [deleting, setDeleting] = useState(false);
 
   const confirmDelete = () =>
-    Alert.alert('Delete your account?', 'This permanently deletes your account and all your logged meals. This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete forever', style: 'destructive',
-        onPress: async () => {
-          setDeleting(true);
-          try {
-            await deleteAccount();
-          } catch {
-            Alert.alert('Could not delete', 'Check your internet and try again.');
-          } finally {
-            setDeleting(false);
-          }
-        },
-      },
-    ]);
+    confirmDialog('Delete your account?', 'This permanently deletes your account and all your logged meals. This cannot be undone.', 'Delete forever', async () => {
+      setDeleting(true);
+      try {
+        await deleteAccount();
+      } catch {
+        notify('Could not delete', 'Check your internet and try again.');
+      } finally {
+        setDeleting(false);
+      }
+    });
 
   const row = (label, onPress, danger) => (
     <TouchableOpacity onPress={onPress} accessibilityRole="button" style={{ paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: c.border }}>

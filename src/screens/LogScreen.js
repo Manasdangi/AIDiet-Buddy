@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, RefreshControl, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { deleteMeal, fetchDay, sumMeals } from '../services/meals';
 import { addDays, dayLabel, isSameDay, startOfDay } from '../lib/dates';
 import { Card, ErrorNote, round } from '../components/ui';
 import MealRow from '../components/MealRow';
+import { confirmDialog, notify } from '../lib/dialog';
 import { useThemeColors, typography, spacing } from '../utils/theme';
 
 export default function LogScreen({ route }) {
@@ -40,21 +41,15 @@ export default function LogScreen({ route }) {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const remove = (meal) =>
-    Alert.alert('Delete this entry?', `${meal.food_name} (${round(meal.calories)} kcal)`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteMeal(meal.id);
-            setMeals((m) => m.filter((x) => x.id !== meal.id));
-            loadToday();
-          } catch {
-            Alert.alert('Could not delete', 'Please try again.');
-          }
-        },
-      },
-    ]);
+    confirmDialog('Delete this entry?', `${meal.food_name} (${round(meal.calories)} kcal)`, 'Delete', async () => {
+      try {
+        await deleteMeal(meal.id);
+        setMeals((m) => m.filter((x) => x.id !== meal.id));
+        loadToday();
+      } catch {
+        notify('Could not delete', 'Please try again.');
+      }
+    });
 
   const total = sumMeals(meals);
   const isToday = isSameDay(day, new Date());
