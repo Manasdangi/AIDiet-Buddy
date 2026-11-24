@@ -1,50 +1,32 @@
-# Welcome to your Expo app 👋
+# DietBuddy
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Calorie tracker for iOS and Android. Log a meal by typing, speaking or photographing it. Claude estimates calories and macros; Supabase stores your data.
 
-## Get started
+Stack: Expo (React Native), Supabase (auth, Postgres with RLS, Edge Function), Claude API (server-side only).
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run locally
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env        # public Supabase URL + publishable key
+npx expo start              # typing + photos work in Expo Go
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Voice input uses on-device speech recognition and needs a development build: `eas build --profile development --platform android` (or ios).
 
-## Learn more
+## Backend
 
-To learn more about developing your project with Expo, look at the following resources:
+- `supabase/migrations/` : schema and row level security (already applied to the `dietbuddy` project).
+- `supabase/functions/analyze-meal/` : the only place the Anthropic key is used. Deploy with the Supabase CLI or dashboard.
+- Set the key as a secret (never in the app): `supabase secrets set ANTHROPIC_API_KEY=sk-ant-... --project-ref xqclhdenulebghjdtacs`
+- Optional: `CLAUDE_MODEL` secret (default `claude-sonnet-5-5`; a smaller model costs less).
+- Limits per user: 6 analyses/minute and 80/day (`consume_ai_quota`).
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Release checklist
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Supabase dashboard: Authentication > SMTP: add a real email provider (the built-in sender is limited to a few emails per hour). Set the Site URL and customise the confirmation email.
+2. Set `ANTHROPIC_API_KEY` as above.
+3. Replace the placeholder icon and splash in `assets/images/` with your own artwork (1024x1024 icon).
+4. Host a privacy policy page and put its URL in `EXPO_PUBLIC_PRIVACY_URL` (in `eas.json` env) and in both store listings.
+5. `eas build --profile production --platform all`, then `eas submit`.
+6. Store listings: describe that meal photos and text are sent to an AI service for analysis (App Store privacy labels and Play Data safety form); calorie values are estimates, not medical advice.

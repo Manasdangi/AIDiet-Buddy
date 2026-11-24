@@ -1,60 +1,54 @@
 {
   "expo": {
     "name": "DietBuddy",
-    "slug": "DietBuddy",
+    "slug": "dietbuddy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dietbuddy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#09090B"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.manasraj.dietbuddy",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.manasraj.dietbuddy",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#09090B",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"],
+      "blockedPermissions": ["android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"]
     },
     "plugins": [
       [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
-        }
-      ],
-      [
         "expo-image-picker",
         {
-          "photosPermission": "Allow DietBuddy to access your photos to log meals.",
-          "cameraPermission": "Allow DietBuddy to use the camera to scan your food."
+          "photosPermission": "DietBuddy uses your photos so you can log a meal from a picture.",
+          "cameraPermission": "DietBuddy uses the camera so you can photograph a meal to log it."
         }
       ],
       [
-        "expo-av",
+        "expo-speech-recognition",
         {
-          "microphonePermission": "Allow DietBuddy to access your microphone to log audio entries."
+          "microphonePermission": "DietBuddy uses the microphone so you can describe a meal by voice.",
+          "speechRecognitionPermission": "DietBuddy uses speech recognition to turn your voice into a meal description."
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
+    ]
   }
 }

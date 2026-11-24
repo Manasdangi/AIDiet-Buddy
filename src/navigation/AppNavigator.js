@@ -1,17 +1,20 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions, Text, ActivityIndicator } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import useStore from '../store/useStore';
-import { useThemeColors, borderRadius, spacing } from '../utils/theme';
+import { useThemeColors, borderRadius, spacing, typography } from '../utils/theme';
 
 import OnboardingScreen from '../screens/OnboardingScreen';
+import AuthScreen from '../screens/AuthScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import { backendConfigured } from '../lib/supabase';
+import { Button } from '../components/ui';
 import HomeScreen from '../screens/HomeScreen';
 import LogScreen from '../screens/LogScreen';
 import HistoryScreen from '../screens/HistoryScreen';
-import WorkoutScreen from '../screens/WorkoutScreen';
 import AddScreen from '../screens/AddScreen';
 
 const Tab = createBottomTabNavigator();
@@ -41,10 +44,10 @@ const CustomTabBar = ({ state, descriptors, navigation, colors, theme }) => {
 
           let iconName;
           if (route.name === 'Home') iconName = isFocused ? 'home' : 'home-outline';
-          else if (route.name === 'Workout') iconName = isFocused ? 'barbell' : 'barbell-outline';
-          else if (route.name === 'Add') iconName = 'add';
           else if (route.name === 'Log') iconName = isFocused ? 'restaurant' : 'restaurant-outline';
-          else if (route.name === 'History') iconName = isFocused ? 'person' : 'person-outline';
+          else if (route.name === 'Add') iconName = 'add';
+          else if (route.name === 'History') iconName = isFocused ? 'bar-chart' : 'bar-chart-outline';
+          else if (route.name === 'Profile') iconName = isFocused ? 'person' : 'person-outline';
 
           // Center "Add" button gets special styling
           const isCenter = route.name === 'Add';
@@ -55,7 +58,7 @@ const CustomTabBar = ({ state, descriptors, navigation, colors, theme }) => {
               activeOpacity={0.8}
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
+              accessibilityLabel={route.name === 'Add' ? 'Log a meal' : route.name}
               testID={options.tabBarTestID}
               onPress={onPress}
               style={styles.tabItem}
@@ -84,16 +87,35 @@ const CustomTabBar = ({ state, descriptors, navigation, colors, theme }) => {
   );
 };
 
+function Centered({ children }) {
+  const colors = useThemeColors();
+  return <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: spacing.lg }}>{children}</View>;
+}
+
 export default function AppNavigator() {
-  const { goal, theme } = useStore();
+  const { theme, booting, session, profile, profileError, loadProfile, init } = useStore();
   const colors = useThemeColors();
 
-  if (!goal) {
-    return <OnboardingScreen />;
+  React.useEffect(() => { init(); }, [init]);
+
+  if (!backendConfigured) {
+    return <Centered><Text style={{ ...typography.body, color: colors.text, textAlign: 'center' }}>This build is missing its server settings. Please reinstall the latest version.</Text></Centered>;
   }
+  if (booting) return <Centered><ActivityIndicator color={colors.primary} size="large" /></Centered>;
+  if (!session) return <AuthScreen />;
+  if (profileError && !profile) {
+    return (
+      <Centered>
+        <Text style={{ ...typography.body, color: colors.text, textAlign: 'center', marginBottom: spacing.md }}>{profileError}</Text>
+        <Button title="Try again" onPress={loadProfile} style={{ paddingHorizontal: spacing.xl }} />
+      </Centered>
+    );
+  }
+  if (!profile) return <OnboardingScreen />;
 
   const MyTheme = {
     ...DefaultTheme,
+    dark: theme === 'dark',
     colors: {
       ...DefaultTheme.colors,
       background: colors.background,
@@ -108,15 +130,13 @@ export default function AppNavigator() {
     <NavigationContainer theme={MyTheme}>
       <Tab.Navigator
         tabBar={(props) => <CustomTabBar {...props} colors={colors} theme={theme} />}
-        screenOptions={{
-          headerShown: false,
-        }}
+        screenOptions={{ headerShown: false }}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Workout" component={WorkoutScreen} />
-        <Tab.Screen name="Add" component={AddScreen} />
         <Tab.Screen name="Log" component={LogScreen} />
+        <Tab.Screen name="Add" component={AddScreen} />
         <Tab.Screen name="History" component={HistoryScreen} />
+        <Tab.Screen name="Profile" component={ProfileScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
