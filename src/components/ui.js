@@ -7,7 +7,7 @@ export function Card({ children, style }) {
   return <View style={[{ backgroundColor: c.surface, borderRadius: borderRadius.md, borderWidth: 1, borderColor: c.border, padding: spacing.md }, style]}>{children}</View>;
 }
 
-export function Button({ title, onPress, loading, disabled, variant = 'primary', style }) {
+export function Button({ title, onPress, loading, disabled, variant = 'primary', style, icon }) {
   const c = useThemeColors();
   const off = disabled || loading;
   const bg = variant === 'primary' ? c.primary : variant === 'danger' ? c.error : 'transparent';
@@ -19,9 +19,9 @@ export function Button({ title, onPress, loading, disabled, variant = 'primary',
       activeOpacity={0.8}
       disabled={off}
       onPress={onPress}
-      style={[{ backgroundColor: bg, borderRadius: borderRadius.pill, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', opacity: off ? 0.55 : 1, borderWidth: variant === 'ghost' ? 1 : 0, borderColor: c.border }, style]}
+      style={[{ backgroundColor: bg, borderRadius: borderRadius.pill, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', opacity: off ? 0.55 : 1, borderWidth: variant === 'ghost' ? 1 : 0, borderColor: c.border }, style]}
     >
-      {loading ? <ActivityIndicator color={color} /> : <Text style={{ ...typography.h3, fontSize: 16, color }}>{title}</Text>}
+      {loading ? <ActivityIndicator color={color} /> : <>{icon}<Text style={{ ...typography.h3, fontSize: 16, color }}>{title}</Text></>}
     </TouchableOpacity>
   );
 }

@@ -54,7 +54,8 @@
           "microphonePermission": "DietBuddy uses the microphone so you can describe a meal by voice.",
           "speechRecognitionPermission": "DietBuddy uses speech recognition to turn your voice into a meal description."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "web": {
       "bundler": "metro",

@@ -15,7 +15,7 @@ Built with Expo (React Native), Supabase and the Claude API.
 - **Home.** Today's calories and macros against your targets, plus today's meals.
 - **Log.** Day-by-day diary with previous/next day, pull to refresh and delete.
 - **History.** 14-day calorie chart with your target line, daily average, and a tap-through to any day.
-- **Accounts.** Email and password sign-in, data synced across devices, in-app account deletion.
+- **Accounts.** Email and password or Google sign-in, data synced across devices, in-app account deletion.
 - **Light and dark theme.**
 
 ## How it works
@@ -109,7 +109,12 @@ The schema and the Edge Function are in `supabase/`. To use your own Supabase pr
 2. Deploy the function: `supabase functions deploy analyze-meal --project-ref <ref>`. JWT verification must stay on.
 3. Set the AI key: `supabase secrets set ANTHROPIC_API_KEY=sk-ant-... --project-ref <ref>`.
 4. Put the project URL and publishable key into `.env` and `eas.json`.
-5. Authentication > SMTP: connect a real email provider. The built-in sender allows only a few emails per hour, so sign-up confirmation emails will not reach most users.
+5. Google sign-in (optional but enabled in the app):
+   - Google Cloud Console > APIs and Services > Credentials > Create OAuth client ID, type **Web application**. Add `https://<ref>.supabase.co/auth/v1/callback` as an authorized redirect URI.
+   - Supabase > Authentication > Providers > Google: paste the client ID and secret and enable it.
+   - Supabase > Authentication > URL Configuration: add `dietbuddy://**` to Redirect URLs (and `exp://**` while testing in Expo Go, plus your web URL if you host the web preview).
+   - App Store note: Apple expects apps that offer Google sign-in to also offer Sign in with Apple (guideline 4.8). Add it before submitting to iOS.
+6. Authentication > SMTP: connect a real email provider. The built-in sender allows only a few emails per hour, so sign-up confirmation emails will not reach most users.
 
 ### Data model
 
@@ -147,7 +152,7 @@ Both user tables have row level security: a user can only read and write their o
 - No password reset yet. It needs the Supabase email templates and redirect URL to be configured first.
 - No editing of a saved meal (delete and re-add).
 - Estimates come from a model, so portions and hidden ingredients can be off. The confidence level and note are shown for that reason.
-- Ideas: Apple and Google sign-in, saved favourite meals, weight tracking, reminders, barcode scan.
+- Ideas: Sign in with Apple (needed for iOS review alongside Google), saved favourite meals, weight tracking, reminders, barcode scan.
 
 ## Disclaimer
 

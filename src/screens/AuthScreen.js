@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Text, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import { Button, ErrorNote, Field } from '../components/ui';
+import { signInWithGoogle } from '../services/auth';
+import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors, typography, spacing } from '../utils/theme';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -15,6 +17,7 @@ export default function AuthScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   const submit = async () => {
     setError('');
@@ -49,6 +52,22 @@ export default function AuthScreen() {
     }
   };
 
+  const google = async () => {
+    setError('');
+    setInfo('');
+    setGoogleBusy(true);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      const m = String(err?.message || '');
+      if (/provider is not enabled|unsupported provider/i.test(m)) setError('Google sign-in is not set up yet. Use email for now.');
+      else if (/network|fetch/i.test(m)) setError('No internet connection.');
+      else setError('Google sign-in did not finish. Please try again.');
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.background }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -61,7 +80,14 @@ export default function AuthScreen() {
           <Field label="PASSWORD" value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" textContentType={mode === 'signup' ? 'newPassword' : 'password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} placeholder={mode === 'signup' ? 'At least 8 characters' : 'Your password'} onSubmitEditing={submit} />
           <ErrorNote message={error} />
           {info ? <Text style={{ ...typography.bodySecondary, color: c.tertiary, marginBottom: spacing.md }}>{info}</Text> : null}
-          <Button title={mode === 'signin' ? 'Sign in' : 'Create account'} onPress={submit} loading={busy} />
+          <Button title={mode === 'signin' ? 'Sign in' : 'Create account'} onPress={submit} loading={busy} disabled={googleBusy} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: spacing.lg }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+            <Text style={{ ...typography.bodySecondary, color: c.textSecondary, marginHorizontal: spacing.sm }}>or</Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+          </View>
+          <Button title="Continue with Google" variant="ghost" onPress={google} loading={googleBusy} disabled={busy}
+            icon={<Ionicons name="logo-google" size={18} color={c.text} style={{ marginRight: 10 }} />} />
           <TouchableOpacity onPress={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setInfo(''); }} style={{ marginTop: spacing.lg, alignItems: 'center' }} accessibilityRole="button">
             <Text style={{ ...typography.bodySecondary, color: c.textSecondary }}>
               {mode === 'signin' ? "New here? " : 'Already have an account? '}

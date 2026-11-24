@@ -1,4 +1,5 @@
 import 'react-native-url-polyfill/auto';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
@@ -13,6 +14,8 @@ export const supabase = createClient(url || 'https://missing.invalid', key || 'm
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // On the web the OAuth redirect lands back in the page, so the session is read from the URL there.
+    detectSessionInUrl: Platform.OS === 'web',
+    flowType: 'pkce',
   },
 });
